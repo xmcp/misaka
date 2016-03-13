@@ -31,12 +31,13 @@ MOD_KEYS={
 }
 SHIFT={'Lshift','Rshift'}
 NICKNAME={
-    'Up': '↑', 'Down': '↓', 'Left': '←', 'Right': '→',
+    'Up': '↑', 'Down': '↓', 'Left': '←', 'Right': '→', 'Tab': '⇥',
     'Return': '⏎', 'Space': '⎵', 'Back': '◁', 'Delete': '◀',
     'Escape': 'Esc', 'Snapshot': 'PrtSc', 'Prior': 'PgUp', 'Next': 'PgDn',
     'Lcontrol': 'Ctrl', 'Lmenu': 'Alt', 'Lwin': 'Win',
     'Rcontrol': 'Ctrl', 'Rmenu': 'Alt', 'Rwin': 'Win',
-    'Tab': '⇥',
+    'Oem_Minus': '-', 'Oem_Plus': '=',  'Oem_Comma': ',', 'Oem_Period': '.',
+    'Oem_5': '\\', 'Oem_3': '`', 'Oem_2': '/', 'Oem_1': ';', 'Oem_7': "'", 'Oem_4': '[', 'Oem_6': ']',
 }
 
 holdkey=set()
@@ -122,11 +123,11 @@ t=Text(tk,font='Consolas -18')
 t.grid(row=1,column=0,columnspan=2,sticky='nswe')
 
 t.tag_config('warning',foreground='#fff',background='#f00')
-t.tag_config('string',foreground='#00f',background='#fff')
-t.tag_config('info',foreground='#aaa',background='#fff')
+t.tag_config('string',foreground='#00f')
+t.tag_config('info',foreground='#aaa')
 t.tag_config('modkey',foreground='#000',background='#ff0')
 t.tag_config('key',foreground='#fff',background='#444')
-t.tag_config('title',foreground='#444',background='#fff',font='黑体 -12')
+t.tag_config('title',foreground='#444',font='黑体 -12')
 
 threading.Thread(target=hooker).start()
 t.insert(1.0,'注意：输入密码时请暂停记录按键\n','warning')
