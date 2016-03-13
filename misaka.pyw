@@ -23,8 +23,11 @@ tk.rowconfigure(1,weight=1)
 
 SPECIAL_KEYS={
     'Lcontrol','Lmenu','Lwin','Rcontrol','Rmenu','Rwin',
-    'Escape','Snapshot','Home','End','Prior','Next',
+    'Escape','Snapshot','Home','End','Prior','Next','Return',
     'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
+}
+MOD_KEYS={
+    'Lcontrol','Lmenu','Lwin','Rcontrol','Rmenu','Rwin',
 }
 SHIFT={'Lshift','Rshift'}
 NICKNAME={
@@ -33,10 +36,12 @@ NICKNAME={
     'Escape': 'Esc', 'Snapshot': 'PrtSc', 'Prior': 'PgUp', 'Next': 'PgDn',
     'Lcontrol': 'Ctrl', 'Lmenu': 'Alt', 'Lwin': 'Win',
     'Rcontrol': 'Ctrl', 'Rmenu': 'Alt', 'Rwin': 'Win',
+    'Tab': '⇥',
 }
 
 holdkey=set()
 last_time=0
+paused=False
 status='idle'
 
 def hooker():
@@ -68,7 +73,7 @@ def keydown(event):
             t.insert(END,'""','info')
 
     if status=='string':
-        t.insert('end - 2 chars',proc() or chr(event.Ascii) or event.Key,'string')
+        t.insert('end - 2 chars',proc() or (chr(event.Ascii) if event.Ascii else '⍰'),'string')
         if event.Key=='Return':
             status='idle'
             t.insert(END,'\n')
@@ -77,9 +82,9 @@ def keydown(event):
             t.insert('end',' Shift ','modkey')
             for s in SHIFT:
                 holdkey.discard(s)
-        t.insert('end',' %s '%(proc() or event.Key),'modkey' if event.Key in SPECIAL_KEYS else 'key')
+        t.insert('end',' %s '%(proc() or event.Key),'modkey' if event.Key in MOD_KEYS else 'key')
     
-    t.see('end - 1 lines')
+    t.see('end - 2 chars')
     last_time=time.time()
     return True
 
@@ -92,14 +97,16 @@ def keyup(event):
     return True
 
 def pause(*_):
-    pass
+    global paused
+    paused=not paused
+    pausebtn['text']='已暂停' if paused else '暂停'
 
 def clear(*_):
-    pass
+    t.delete(1.0,'end - 2 chars linestart')
 
-pausebtn=Button(tk,text='Pause',command=pause)
+pausebtn=Button(tk,text='暂停',command=pause)
 pausebtn.grid(row=0,column=0,sticky='we')
-Button(tk,text='Clear',command=clear).grid(row=0,column=1,sticky='we')
+Button(tk,text='清空',command=clear).grid(row=0,column=1,sticky='we')
 
 t=Text(tk,font='Consolas -18')
 t.grid(row=1,column=0,columnspan=2,sticky='nswe')
