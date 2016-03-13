@@ -32,7 +32,7 @@ MOD_KEYS={
 SHIFT={'Lshift','Rshift'}
 NICKNAME={
     'Up': '↑', 'Down': '↓', 'Left': '←', 'Right': '→',
-    'Return': '⏎', 'Space': ' ', 'Back': '◁', 'Delete': '◀',
+    'Return': '⏎', 'Space': '⎵', 'Back': '◁', 'Delete': '◀',
     'Escape': 'Esc', 'Snapshot': 'PrtSc', 'Prior': 'PgUp', 'Next': 'PgDn',
     'Lcontrol': 'Ctrl', 'Lmenu': 'Alt', 'Lwin': 'Win',
     'Rcontrol': 'Ctrl', 'Rmenu': 'Alt', 'Rwin': 'Win',
@@ -42,6 +42,7 @@ NICKNAME={
 holdkey=set()
 last_time=0
 paused=False
+current_id=None
 status='idle'
 
 def hooker():
@@ -57,10 +58,19 @@ def keydown(event):
     
     global status
     global last_time
+    global current_id
     holdkey.add(event.Key)
     
-    if event.Key in SHIFT:
+    if paused or event.Key in SHIFT:
         return True
+
+    if current_id!=event.Window:
+        current_id=event.Window
+        if status!='idle':
+            status='idle'
+            t.insert(END,'\n')
+        t.insert(END,u'\n✪ %s\n'%event.WindowName.decode('gbk','ignore'),'title')
+    
     if status=='string':
         if event.Key in SPECIAL_KEYS or time.time()-last_time>5:
             status='idle'
@@ -116,6 +126,7 @@ t.tag_config('string',foreground='#00f',background='#fff')
 t.tag_config('info',foreground='#aaa',background='#fff')
 t.tag_config('modkey',foreground='#000',background='#ff0')
 t.tag_config('key',foreground='#fff',background='#444')
+t.tag_config('title',foreground='#444',background='#fff',font='黑体 -12')
 
 threading.Thread(target=hooker).start()
 t.insert(1.0,'注意：输入密码时请暂停记录按键\n','warning')
