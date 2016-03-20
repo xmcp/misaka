@@ -45,13 +45,31 @@ last_time=0
 paused=False
 current_id=None
 status='idle'
+buggy=False
+
+def ti(*_):
+    t['state']='normal'
+    t.insert(*_)
+    t['state']='disabled'
 
 def hooker():
+    def wrapper(f):
+        def sub(*__,**_):
+            try:
+                return f(*__,**_)
+            except:
+                global buggy
+                buggy=True
+                raise
+        return sub
+    
     hm=pyHook.HookManager()
-    hm.SubscribeKeyDown(keydown)
-    hm.SubscribeKeyUp(keyup)
+    hm.SubscribeKeyDown(wrapper(keydown))
+    hm.SubscribeKeyUp(wrapper(keyup))
     hm.HookKeyboard()
-    pythoncom.PumpMessages()
+    while not buggy:
+        pythoncom.PumpWaitingMessages()
+    ti(END,u'键盘hook已退出\n','info')
 
 def keydown(event):
     def proc():
@@ -69,31 +87,31 @@ def keydown(event):
         current_id=event.Window
         if status!='idle':
             status='idle'
-            t.insert(END,'\n')
-        t.insert(END,u'\n✪ %s\n'%event.WindowName.decode('gbk','ignore'),'title')
+            ti(END,'\n')
+        ti(END,u'\n✪ %s\n'%event.WindowName.decode('gbk','ignore'),'title')
     
     if status=='string':
         if event.Key in SPECIAL_KEYS or time.time()-last_time>5:
             status='idle'
-            t.insert(END,'\n')
+            ti(END,'\n')
     if status=='idle':
         if event.Key in SPECIAL_KEYS:
             status='modkey'
         else:
             status='string'
-            t.insert(END,'""','info')
+            ti(END,'""','info')
 
     if status=='string':
-        t.insert('end - 2 chars',proc() or (chr(event.Ascii) if event.Ascii else '⍰'),'string')
+        ti('end - 2 chars',proc() or (chr(event.Ascii) if event.Ascii else '⍰'),'string')
         if event.Key=='Return':
             status='idle'
-            t.insert(END,'\n')
+            ti(END,'\n')
     else: #status=='modkey'
         if any((s in holdkey for s in SHIFT)):
-            t.insert('end',' Shift ','modkey')
+            ti('end',' Shift ','modkey')
             for s in SHIFT:
                 holdkey.discard(s)
-        t.insert('end',' %s '%(proc() or event.Key),'modkey' if event.Key in MOD_KEYS else 'key')
+        ti('end',' %s '%(proc() or event.Key),'modkey' if event.Key in MOD_KEYS else 'key')
     
     t.see('end - 2 chars')
     last_time=time.time()
@@ -104,7 +122,7 @@ def keyup(event):
     holdkey.discard(event.Key)
     if status=='modkey' and not holdkey:
         status='idle'
-        t.insert('end','\n')
+        ti('end','\n')
     return True
 
 def pause(*_):
@@ -113,13 +131,15 @@ def pause(*_):
     pausebtn['text']='已暂停' if paused else '暂停'
 
 def clear(*_):
+    t['state']='normal'
     t.delete(1.0,'end - 2 chars linestart')
+    t['state']='disabled'
 
 pausebtn=Button(tk,text='暂停',command=pause)
 pausebtn.grid(row=0,column=0,sticky='we')
 Button(tk,text='清空',command=clear).grid(row=0,column=1,sticky='we')
 
-t=Text(tk,font='Consolas -18')
+t=Text(tk,font='Consolas -18',state='disabled')
 t.grid(row=1,column=0,columnspan=2,sticky='nswe')
 
 t.tag_config('warning',foreground='#fff',background='#f00')
@@ -130,5 +150,5 @@ t.tag_config('key',foreground='#fff',background='#444')
 t.tag_config('title',foreground='#444',font='黑体 -12')
 
 threading.Thread(target=hooker).start()
-t.insert(1.0,'注意：输入密码时请暂停记录按键\n','warning')
+ti(1.0,'注意：输入密码时请暂停记录按键\n','warning')
 mainloop()
